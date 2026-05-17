@@ -13,7 +13,6 @@ These guidelines exist to prevent common failure modes:
 - solving the wrong problem confidently
 - overengineering simple requests
 - touching unrelated code
-- rewriting comments or code the model does not fully understand
 - claiming success without verification
 
 **Tradeoff:** These guidelines favor caution, precision, and small diffs over speed. For trivial one-line fixes, use judgment and keep overhead low.
@@ -64,7 +63,6 @@ Default to:
 - existing patterns over new frameworks or helper layers
 - a local fix over a broad refactor
 - one clear path over configurable multi-mode behavior
-- a naive version that is likely correct before a faster version when optimization is part of the task
 
 Avoid unless explicitly needed:
 - speculative abstractions
@@ -90,7 +88,6 @@ When editing existing code:
 - do not reformat unrelated lines
 - do not rename things just because a different name is nicer
 - do not upgrade patterns or syntax unless the task requires it
-- do not rewrite or remove existing comments unless the task requires it or your change made them inaccurate
 - match the surrounding style, even if it is not your favorite style
 
 You may clean up only what your change directly causes:
@@ -115,7 +112,6 @@ Examples:
 - "Add validation" -> define invalid inputs, add tests, make them pass
 - "Refactor this" -> preserve behavior, run existing tests, verify outputs remain the same
 - "Make this faster" -> define the bottleneck, measure before and after, verify improvement
-- "Optimize this" -> keep or write a version that is likely correct first, then optimize while preserving checked behavior
 
 For non-trivial tasks, use a short plan in this shape:
 
@@ -134,7 +130,6 @@ Verification can include:
 - UI behavior checks
 
 Never imply success without saying what was verified and what was not.
-Prefer declarative success criteria over step-by-step micromanagement when reframing the task.
 
 ## Default Task Flow
 
@@ -148,12 +143,10 @@ For most non-trivial coding tasks, follow this order:
 2. State assumptions or plan briefly
    - keep it short
    - mention tradeoffs only if relevant
-   - reframe the task as success criteria when that will guide the work better than imperative instructions
 
 3. Make the smallest correct change
    - prefer local edits
    - reuse existing patterns
-   - for optimization work, preserve a clearly correct baseline until checks are in place
 
 4. Verify
    - run or describe the narrowest meaningful checks first

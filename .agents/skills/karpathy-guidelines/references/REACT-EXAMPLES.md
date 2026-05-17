@@ -1,6 +1,6 @@
 # React Examples
 
-Real-world React examples demonstrating the four principles. These focus on components, hooks, UI state, and bug fixes in existing codebases. Use `EXAMPLES.md` for the more general cross-language patterns around ambiguity, small diffs, and verification.
+Real-world React examples demonstrating the four principles. These focus on components, hooks, UI state, and bug fixes in existing codebases.
 
 ---
 

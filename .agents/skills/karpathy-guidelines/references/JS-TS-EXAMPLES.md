@@ -1,6 +1,6 @@
 # JS / TS Examples
 
-Real-world JavaScript and TypeScript examples demonstrating the four principles. Use this file for language-specific patterns; use `EXAMPLES.md` for the broader cross-language workflow and verification mindset.
+Real-world JavaScript and TypeScript examples demonstrating the four principles. Each example shows what coding agents commonly do wrong and how to fix it.
 
 ---
 

@@ -1,12 +1,6 @@
 # Examples
 
-Cross-language behavior patterns for the four principles. This file focuses on decision-making and workflow, while the stack-specific files cover JS/TS, Node, and React syntax in more detail.
-
-For Codex, translate these patterns into a simple loop:
-- inspect the surrounding code first
-- make the smallest justified diff
-- run the narrowest relevant verification
-- review the resulting diff before declaring success
+Real-world code examples demonstrating the four principles. Each example shows what LLMs commonly do wrong and how to fix it.
 
 ---
 
@@ -109,29 +103,47 @@ Which aspect matters most for your use case?
 **❌ What LLMs Do (Overengineered)**
 
 ```python
-class DiscountStrategy:
-    def calculate(self, amount):
-        raise NotImplementedError
+from abc import ABC, abstractmethod
+from enum import Enum
+from typing import Protocol, Union
+from dataclasses import dataclass
 
+class DiscountStrategy(ABC):
+    @abstractmethod
+    def calculate(self, amount: float) -> float:
+        pass
 
 class PercentageDiscount(DiscountStrategy):
-    def __init__(self, percent):
-        self.percent = percent
+    def __init__(self, percentage: float):
+        self.percentage = percentage
+    
+    def calculate(self, amount: float) -> float:
+        return amount * (self.percentage / 100)
 
-    def calculate(self, amount):
-        return amount * (self.percent / 100)
+class FixedDiscount(DiscountStrategy):
+    def __init__(self, fixed_amount: float):
+        self.fixed_amount = fixed_amount
+    
+    def calculate(self, amount: float) -> float:
+        return min(self.fixed_amount, amount)
 
+@dataclass
+class DiscountConfig:
+    strategy: DiscountStrategy
+    min_purchase: float = 0.0
+    max_discount: float = float('inf')
 
 class DiscountCalculator:
-    def __init__(self, strategy, min_purchase=0, max_discount=float("inf")):
-        self.strategy = strategy
-        self.min_purchase = min_purchase
-        self.max_discount = max_discount
-
-    def apply(self, amount):
-        if amount < self.min_purchase:
+    def __init__(self, config: DiscountConfig):
+        self.config = config
+    
+    def apply_discount(self, amount: float) -> float:
+        if amount < self.config.min_purchase:
             return 0
-        return min(self.strategy.calculate(amount), self.max_discount)
+        discount = self.config.strategy.calculate(amount)
+        return min(discount, self.config.max_discount)
+
+# Usage requires 30+ lines of setup for a simple calculation
 ```
 
 **✅ What Should Happen (Simple)**
@@ -157,26 +169,42 @@ discount = calculate_discount(100.0, 10.0)  # $10 off
 class PreferenceManager:
     def __init__(self, db, cache=None, validator=None):
         self.db = db
-        self.cache = cache
-        self.validator = validator
-
-    def save(self, user_id, prefs, merge=True, validate=True, notify=False):
-        if validate and self.validator:
-            self.validator.validate(prefs)
-
+        self.cache = cache or InMemoryCache()
+        self.validator = validator or DefaultValidator()
+    
+    def save(self, user_id: int, prefs: dict, 
+             merge: bool = True, 
+             validate: bool = True,
+             notify: bool = False) -> bool:
+        """Save preferences with optional merging, validation, and notifications."""
+        
+        if validate:
+            errors = self.validator.validate(prefs)
+            if errors:
+                raise ValidationError(errors)
+        
+        existing = self.get(user_id) if merge else {}
+        
         if merge:
-            prefs = {**self.get(user_id), **prefs}
-
+            existing.update(prefs)
+            prefs = existing
+        
         self.db.execute(
             "UPDATE users SET preferences = ? WHERE id = ?",
-            (json.dumps(prefs), user_id),
+            (json.dumps(prefs), user_id)
         )
-
+        
         if self.cache:
             self.cache.set(f"prefs:{user_id}", prefs)
-
+        
         if notify:
             self.notify_preference_change(user_id, prefs)
+        
+        return True
+    
+    def notify_preference_change(self, user_id: int, prefs: dict):
+        # Another 30 lines for a feature nobody asked for
+        pass
 ```
 
 **✅ What Should Happen (Just What Was Asked)**
@@ -337,37 +365,6 @@ def save_preferences(db, user_id: int, preferences: dict):
 
 **Matched:** Single quotes, no type hints, existing boolean pattern, spacing style.
 
-### Example 3: Preserve Comments and Unknown Code
-
-**User Request:** "Rename `jobCount` to `totalJobs` in the summary output"
-
-**❌ What LLMs Do (Edits Beyond Understanding)**
-
-```diff
-- # Keep this summary shape stable for CSV export.
-- def render_summary(jobCount, failedCount):
--     return f"{jobCount} jobs, {failedCount} failed"
-+ def render_summary(totalJobs, failedCount):
-+     return f"{totalJobs} jobs processed, {failedCount} failed"
-```
-
-**Problems:**
-- Removed a comment that may encode a real constraint
-- Changed the output copy even though the request was only a rename
-- Touched behavior the model has not verified
-
-**✅ What Should Happen**
-
-```diff
-  # Keep this summary shape stable for CSV export.
-- def render_summary(jobCount, failedCount):
--     return f"{jobCount} jobs, {failedCount} failed"
-+ def render_summary(totalJobs, failedCount):
-+     return f"{totalJobs} jobs, {failedCount} failed"
-```
-
-**Only changed:** the requested name, while preserving the documented behavior.
-
 ---
 
 ## 4. Goal-Driven Execution
@@ -495,47 +492,6 @@ def sort_scores(scores):
 
 # Verify: Test passes consistently
 ```
-
-### Example 4: Correctness Before Optimization
-
-**User Request:** "Make duplicate detection faster on large imports"
-
-**❌ What LLMs Do (Optimize First)**
-
-```python
-def dedupe_jobs(jobs):
-    return list({f"{job['company']}::{job['title']}": job for job in jobs}.values())
-```
-
-**Problems:**
-- Changes behavior before defining which duplicates are actually equivalent
-- Silently switches to "last write wins"
-- Optimizes before proving the new key preserves correctness
-
-**✅ What Should Happen**
-
-```text
-1. Lock in current expected behavior with a focused fixture
-   Verify:
-   - duplicate rows collapse the way the product expects
-   - non-duplicates with same title at different companies stay separate
-   - output order stays stable if that matters today
-
-2. Keep or write the simplest version that is very likely correct
-   Verify:
-   - focused test passes
-
-3. Measure the bottleneck
-   Verify:
-   - import of a representative large fixture is actually slow enough to matter
-
-4. Optimize while preserving the same checks
-   Verify:
-   - focused correctness tests still pass
-   - benchmark improves on the representative fixture
-```
-
-**Key pattern:** correctness first, optimization second. Do not trade one for the other by accident.
 
 ---
 

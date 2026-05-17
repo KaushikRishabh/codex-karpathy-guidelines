@@ -1,6 +1,6 @@
 # Node Examples
 
-Real-world Node.js examples demonstrating the four principles. These focus on Express routes, scraping jobs, background work, and server-side utilities. Use `EXAMPLES.md` when you want the more general workflow patterns behind these examples.
+Real-world Node.js examples demonstrating the four principles. These focus on Express routes, scraping jobs, background work, and server-side utilities.
 
 ---
 
