@@ -1,0 +1,26 @@
+{
+  "purpose": "Personal source backup before Mac return",
+  "original_head": "0deddcec46a8695a74f7c6704eaf0cc7bdc174c7",
+  "original_branch": "master",
+  "excluded": [
+    {
+      "path": ".DS_Store",
+      "reason": "cache, dependency, generated output, personal document, third-party or session directory"
+    },
+    {
+      "path": ".agents/.DS_Store",
+      "reason": "cache, dependency, generated output, personal document, third-party or session directory"
+    },
+    {
+      "path": ".agents/skills/.DS_Store",
+      "reason": "cache, dependency, generated output, personal document, third-party or session directory"
+    },
+    {
+      "path": ".codex/config.toml",
+      "reason": "cache, dependency, generated output, personal document, third-party or session directory"
+    }
+  ],
+  "history_screened": true,
+  "workflow_restore": "Files under .backup-workflows/ belong under .github/workflows/ when intentionally enabling CI.",
+  "dependency_restore": "Dependency folders, compiled artifacts and model packages are excluded; restore using project manifests and provenance docs."
+}
